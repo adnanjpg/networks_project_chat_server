@@ -1,5 +1,6 @@
 
 import WebSocket from 'ws'
+import DbManager from './processors/db_manager';
 
 import { port } from './utils/consts'
 
@@ -24,6 +25,8 @@ async function ls() {
 }
 ls();
 
+let dbManager = new DbManager()
+
 
 wss.on("connection", (ws: any, request: any): void => {
 
@@ -40,3 +43,5 @@ wss.on("error", (error: any) => {
 wss.on("close", (code: any, reason: any) => {
     console.log(`[WebSocket] Closed: ${code} ${reason}`)
 });
+
+export { dbManager }
