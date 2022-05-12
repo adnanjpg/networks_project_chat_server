@@ -31,6 +31,10 @@ class DbManager {
         return this.getUsers()?.find(user => user.id === id)
     }
 
+    addUser(user: UserModel): void {
+        this.db.push("/users", user.toJson())
+    }
+
     getChats(ids?: string[]): ChatModel[] {
         let chats = this.db.get("/chats")?.map(ChatModel.fromJson)
 
@@ -50,6 +54,10 @@ class DbManager {
         return this.getChats()?.find(chat => chat.id === id)
     }
 
+    addChat(chat: ChatModel): void {
+        this.db.push("/chats", chat.toJson())
+    }
+
     getMessages(ids?: string[]): ChatMessageModel[] {
         let msgs = this.db.get("/messages")?.map(ChatMessageModel.fromJson)
 
@@ -67,6 +75,10 @@ class DbManager {
         return this.getMessages()?.find(msg => msg.id === id)
     }
 
+    addMessage(message: ChatMessageModel): void {
+        this.db.push("/messages", message.toJson())
+    }
+
     getAttachments(ids?: string[]): AttachmentModel[] {
         let atts = this.db.get("/attachments")?.map(AttachmentModel.fromJson)
 
@@ -82,6 +94,10 @@ class DbManager {
 
     getAttachment(id: string): AttachmentModel | undefined {
         return this.getAttachments()?.find(att => att.id === id)
+    }
+
+    addAttachment(attachment: AttachmentModel): void {
+        this.db.push("/attachments", attachment.toJson())
     }
 
 }

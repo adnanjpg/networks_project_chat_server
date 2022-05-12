@@ -1,3 +1,5 @@
 const port = 8080
 
-export { port }
+const authCommand = 'auth'
+
+export { port, authCommand }
