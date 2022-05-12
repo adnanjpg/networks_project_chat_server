@@ -2,5 +2,16 @@
   "name": "networks_project_chat_server",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon ./src/app.ts"
+  },
+  "dependencies": {
+    "@types/node": "^17.0.32",
+    "nodemon": "^2.0.16",
+    "typescript": "^4.6.4"
+  },
+  "devDependencies": {
+    "ts-node": "^10.7.0"
+  }
 }
