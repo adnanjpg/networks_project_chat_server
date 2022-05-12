@@ -26,6 +26,13 @@ class MessageHandler {
         if (this.strEquals(commandName, authCommand)) {
             let userId = sp[1]
 
+            /// if user has entered before,
+            /// we generate a new user id
+            /// for them 
+            if (!userId) {
+                userId = dbManager.generateUserId()
+            }
+
             let user = dbManager.getUser(userId)
 
             if (!user) {
@@ -39,6 +46,8 @@ class MessageHandler {
                 user = new UserModel(userId, name)
 
                 dbManager.addUser(user)
+
+                this.ws.send(`${authCommand}/${userId}/${name}`)
 
                 return;
 
