@@ -1,7 +1,9 @@
 import { assert } from "console"
 import { dbManager } from "../app"
+import MessageModel from "../models/message_model"
 import UserModel from "../models/user_model"
 import { authCommand } from "../utils/consts"
+import StatusCode from "../utils/enums/status_code"
 
 class MessageHandler {
     ws: any
@@ -16,46 +18,41 @@ class MessageHandler {
 
 
     handleMessage(messageAscii: any): void {
-        let message = messageAscii.toString()
+        let msg = messageAscii.toString()
+        let message = MessageModel.fromJson(msg)
 
-        let sp = message.split("/")
+        let commandName = message.title
 
-        let commandName = sp[0]
+        console.log(commandName)
 
+        if (!commandName) {
+            return;
+        }
 
         if (this.strEquals(commandName, authCommand)) {
-            let userId = sp[1]
+            let user = message.user
 
+            let userId = user?.id
             /// if user has entered before,
             /// we generate a new user id
             /// for them 
-            if (!userId) {
+            if (!user || !userId) {
                 userId = dbManager.generateUserId()
+                user = new UserModel(userId, user?.name)
             }
 
-            let user = dbManager.getUser(userId)
+            dbManager.addUser(user)
 
-            if (!user) {
-                let name = sp[2]
+            let response = new MessageModel(user, authCommand, user.toJson(), StatusCode.success)
 
-                if (!name) {
-                    assert(false, "No name provided")
-                    return;
-                }
+            this.ws.send(response.toJsonStr())
 
-                user = new UserModel(userId, name)
+            console.log('authed user:', user)
 
-                dbManager.addUser(user)
-
-                this.ws.send(`${authCommand}/${userId}/${name}`)
-
-                return;
-
-            }
+            return;
         }
-
-
     }
 }
+
 
 export default MessageHandler

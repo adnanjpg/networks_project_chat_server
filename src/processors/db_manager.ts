@@ -13,7 +13,16 @@ class DbManager {
     }
 
     getUsers(ids?: string[]): UserModel[] {
-        let usrs = this.db.get("/users")?.map(UserModel.fromJson)
+
+        let usersList
+
+        try {
+            usersList = this.db.get("/users")
+        } catch (error) {
+            usersList = []
+        }
+
+        let usrs = usersList?.map(UserModel.fromJson)
 
         if (usrs) {
 
@@ -36,11 +45,19 @@ class DbManager {
     }
 
     addUser(user: UserModel): void {
-        this.db.push("/users", user.toJson())
+        this.db.push("/users", user)
     }
 
     getChats(ids?: string[]): ChatModel[] {
-        let chats = this.db.get("/chats")?.map(ChatModel.fromJson)
+        let chatsList
+        try {
+
+            chatsList = this.db.get("/chats")
+        } catch (e) {
+            chatsList = []
+        }
+
+        let chats = chatsList?.map(ChatModel.fromJson)
 
         if (chats) {
 
@@ -59,7 +76,7 @@ class DbManager {
     }
 
     addChat(chat: ChatModel): void {
-        this.db.push("/chats", chat.toJson())
+        this.db.push("/chats", chat)
     }
 
     generateChatId(): string {
@@ -67,7 +84,15 @@ class DbManager {
     }
 
     getMessages(ids?: string[]): ChatMessageModel[] {
-        let msgs = this.db.get("/messages")?.map(ChatMessageModel.fromJson)
+        let msgsList
+        try {
+
+            msgsList = this.db.get("/messages")
+        } catch (e) {
+            msgsList = []
+        }
+
+        let msgs = msgsList?.map(ChatMessageModel.fromJson)
 
         if (msgs) {
 
@@ -84,7 +109,7 @@ class DbManager {
     }
 
     addMessage(message: ChatMessageModel): void {
-        this.db.push("/messages", message.toJson())
+        this.db.push("/messages", message)
     }
 
     generateMessageId(): string {
@@ -92,7 +117,15 @@ class DbManager {
     }
 
     getAttachments(ids?: string[]): AttachmentModel[] {
-        let atts = this.db.get("/attachments")?.map(AttachmentModel.fromJson)
+        let attsList
+        try {
+
+            attsList = this.db.get("/attachments")
+        } catch (e) {
+            attsList = []
+        }
+
+        let atts = attsList?.map(AttachmentModel.fromJson)
 
         if (atts) {
 
@@ -109,7 +142,7 @@ class DbManager {
     }
 
     addAttachment(attachment: AttachmentModel): void {
-        this.db.push("/attachments", attachment.toJson())
+        this.db.push("/attachments", attachment)
     }
 
     generateAttachmentId(): string {

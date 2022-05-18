@@ -1,6 +1,7 @@
 
 import WebSocket from 'ws'
 import DbManager from './processors/db_manager';
+import MessageHandler from './processors/message_handler';
 
 import { port } from './utils/consts'
 
@@ -26,13 +27,25 @@ async function ls() {
 ls();
 
 let dbManager = new DbManager()
+let msgHandler: MessageHandler
 
+function setMsgHandlerWs(ws: any) {
+    if (!msgHandler) {
+        msgHandler = new MessageHandler(ws)
+    }
+    else {
+        msgHandler.ws = ws
+    }
+}
 
 wss.on("connection", (ws: any, request: any): void => {
+    setMsgHandlerWs(ws)
 
     const url = request.url
 
     ws.on("message", (messageAscii: any) => {
+        setMsgHandlerWs(ws)
+        msgHandler.handleMessage(messageAscii)
     })
 })
 
