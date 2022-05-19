@@ -12,7 +12,7 @@ class MessageModel {
     params?: Object
     status?: StatusCode
 
-    constructor(user: UserModel, title: string, params: Object, status: StatusCode) {
+    constructor(user: UserModel, title: string, params: Object, status?: StatusCode) {
         this.user = user
         this.title = title
         this.params = params

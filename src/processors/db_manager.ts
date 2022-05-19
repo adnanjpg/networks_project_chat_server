@@ -45,6 +45,10 @@ class DbManager {
     }
 
     addUser(user: UserModel): void {
+        if (this.db.get("/users")?.includes(user)) {
+            return
+        }
+
         this.db.push("/users", user)
     }
 
