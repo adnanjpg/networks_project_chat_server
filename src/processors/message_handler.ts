@@ -3,7 +3,7 @@ import { dbManager } from "../app"
 import ChatModel from "../models/chat/chat_model"
 import MessageModel from "../models/message_model"
 import UserModel from "../models/user_model"
-import { authCommand, chatsListCommand, chatsUsersListCommand, createChatcommand as createChatCommand, getChatsCommand } from "../utils/commands_consts"
+import { authCommand, chatsListCommand, chatsUsersListCommand, createChatCommand, getChatsCommand } from "../utils/commands_consts"
 import StatusCode from "../utils/enums/status_code"
 
 class MessageHandler {
@@ -20,6 +20,12 @@ class MessageHandler {
 
     sendMsg(msg: MessageModel): void {
         this.ws.send(msg.toJsonStr())
+    }
+
+    sendCreateChat(user: UserModel, chat: ChatModel) {
+        let msg = new MessageModel(user, createChatCommand, chat.toJson())
+
+        this.sendMsg(msg)
     }
 
     sendChats(user: UserModel): void {
@@ -77,7 +83,7 @@ class MessageHandler {
 
             dbManager.addChat(chat)
 
-            this.sendChats(u)
+            this.sendCreateChat(u, chat)
         }
 
         if (this.strEquals(commandName, getChatsCommand)) {

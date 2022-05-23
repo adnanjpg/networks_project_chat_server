@@ -3,12 +3,12 @@ const authCommand = 'auth'
 const getChatsCommand = 'getChats'
 const chatsListCommand = 'chatsList'
 const chatsUsersListCommand = 'chatUsersList';
-const createChatcommand = 'createChat'
+const createChatCommand = 'createChat'
 
 export {
     authCommand,
     getChatsCommand,
     chatsListCommand,
     chatsUsersListCommand,
-    createChatcommand,
+    createChatCommand,
 }
