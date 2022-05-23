@@ -45,7 +45,7 @@ class DbManager {
     }
 
     addUser(user: UserModel): void {
-        if (this.db.get("/users")?.includes(user)) {
+        if (this.getUsers().some(u => u.id === user.id)) {
             return
         }
 

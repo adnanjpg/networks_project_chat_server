@@ -92,6 +92,9 @@ class MessageHandler {
             let users = dbManager.getUsers()
 
             users.forEach(user => {
+                if (user.id === u.id) {
+                    return
+                }
                 let msg = new MessageModel(user!, chatsUsersListCommand, user.toJson())
                 this.sendMsg(msg)
             })
