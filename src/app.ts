@@ -1,6 +1,6 @@
 
 import WebSocket from 'ws'
-import DbManager from './processors/db_manager';
+import UserModel from './models/user_model';
 import MessageHandler from './processors/message_handler';
 
 import { port } from './utils/consts'
@@ -11,41 +11,27 @@ const exec = util.promisify(require('child_process').exec);
 // start the server and specify the port number
 const wss = new WebSocket.Server({ port: port })
 
-let ip;
-
 async function ls() {
     // this command will read the ip address of the machine
     // so the client app can easily connect.
 
     const ipCommand = "ipconfig getifaddr en0"
-    const { stdout, stderr } = await exec(ipCommand);
+    const { stdout } = await exec(ipCommand);
     let ip = stdout.replace(/\n/g, '');
 
-    console.log(`IP is ${ip}`);
+    console.log(`[WebSocket] IP is ${ip}`);
     console.log(`[WebSocket] Starting WebSocket server on ${ip}:${port}`)
 }
 ls();
 
-let dbManager = new DbManager()
-let msgHandler: MessageHandler
+wss.on("connection", (ws: WebSocket, request: any): void => {
 
-function setMsgHandlerWs(ws: any) {
-    if (!msgHandler) {
-        msgHandler = new MessageHandler(ws)
-    }
-    else {
-        msgHandler.ws = ws
-    }
-}
+    let id = MessageHandler.addClient(ws)
 
-wss.on("connection", (ws: any, request: any): void => {
-    setMsgHandlerWs(ws)
-
-    const url = request.url
+    MessageHandler.streamUsersTo(id)
 
     ws.on("message", (messageAscii: any) => {
-        setMsgHandlerWs(ws)
-        msgHandler.handleMessage(messageAscii)
+        MessageHandler.handleMessage(id, messageAscii)
     })
 })
 
@@ -56,5 +42,3 @@ wss.on("error", (error: any) => {
 wss.on("close", (code: any, reason: any) => {
     console.log(`[WebSocket] Closed: ${code} ${reason}`)
 });
-
-export { dbManager }

@@ -1,43 +1,113 @@
 import { assert } from "console"
-import { dbManager } from "../app"
-import ChatModel from "../models/chat/chat_model"
+import { title } from "process"
+import WebSocket from "ws"
+import ChatMessageModel from "../models/chat/chat_message_model"
 import MessageModel from "../models/message_model"
 import UserModel from "../models/user_model"
-import { authCommand, chatsListCommand, chatsUsersListCommand, createChatCommand, getChatsCommand } from "../utils/commands_consts"
+import {
+    authCommand,
+    chatsUsersListCommand,
+    sendMessageCommand
+} from "../utils/commands_consts"
+
 import StatusCode from "../utils/enums/status_code"
 
-class MessageHandler {
-    ws: any
+abstract class MessageHandler {
 
-    constructor(ws: any) {
-        this.ws = ws
+    static connectedClients = new Map<string, WebSocket>()
+    static connectedUsers: UserModel[] = new Array<UserModel>()
+
+    private static id = 0
+    static generateId(): string {
+        return (this.id++).toString()
     }
 
-    strEquals(str1: String, str2: String): boolean {
+    static addClient(ws: WebSocket): string {
+        let id = this.generateId()
+        return this.addClientWithId(id, ws)
+    }
+
+    static addClientWithId(id: string, ws: WebSocket): string {
+        this.connectedClients.set(id, ws)
+
+        return id
+    }
+
+    static addUser(ip: string, name: string) {
+
+        let u = new UserModel(ip, name)
+
+        this.connectedUsers.push(u)
+    }
+
+    static sendChatMessage(chatMsg: ChatMessageModel): void {
+        let recievers = chatMsg.recieversIds
+
+        recievers.forEach((recieverId: string) => {
+
+            let ws = this.connectedClients.get(recieverId)
+
+            assert(ws !== undefined, "ws is undefined")
+            if (ws) {
+
+                let msg = new MessageModel(sendMessageCommand, chatMsg.toJson())
+
+                this.sendMsgToWs(msg, ws)
+            }
+
+        })
+    }
+
+    static getUsersFilter(): UserModel[] {
+        let ids = new Set<string>(this.connectedUsers.filter(u => u.id).map(u => u.id!))
+
+        let usrs = new Array<UserModel>()
+
+        ids.forEach(id => {
+            let u = this.connectedUsers.find(u => u.id === id)
+
+            if (u) {
+                usrs.push(u)
+            }
+        })
+
+        return usrs
+    }
+
+    static streamUsersTo(id: string): void {
+        let ws = this.connectedClients.get(id)
+
+        if (!ws) {
+            return
+        }
+
+        let users = this.getUsersFilter().filter(u => u.id != id)
+        let usersJson = users.map(u => u.toJson())
+        let msg = new MessageModel(chatsUsersListCommand, { 'users': usersJson })
+
+        this.sendMsgToWs(msg, ws)
+    }
+
+    static streamUsersToAllExcept(id?: string): void {
+        let keys = Array.from(this.connectedClients.keys())
+
+        for (let idd in keys) {
+            if (idd != id) {
+                this.streamUsersTo(idd)
+            }
+        }
+    }
+
+    static strEquals(str1: String, str2: String): boolean {
         return str1 && str2 && str1.toLowerCase() == str2.toLowerCase()
     }
 
 
-    sendMsg(msg: MessageModel): void {
-        this.ws.send(msg.toJsonStr())
+    static sendMsgToWs(msg: MessageModel, ws: WebSocket): void {
+        ws.send(msg.toJsonStr())
     }
 
-    sendCreateChat(user: UserModel, chat: ChatModel) {
-        let msg = new MessageModel(user, createChatCommand, chat.toJson())
-
-        this.sendMsg(msg)
-    }
-
-    sendChats(user: UserModel): void {
-        let chats = dbManager.getChats()
-
-        chats.forEach(chat => {
-            let msg = new MessageModel(user!, chatsListCommand, chat.toJson())
-            this.sendMsg(msg)
-        })
-    }
-
-    handleMessage(messageAscii: any): void {
+    static handleMessage(ip: string, messageAscii: any): void {
         let msg = messageAscii.toString()
         let message = MessageModel.fromJson(msg)
 
@@ -46,67 +116,35 @@ class MessageHandler {
         console.log(commandName)
 
         if (!commandName) {
-            return;
+            return
         }
-
-        let user: UserModel | undefined = message.user
-        let userId = user?.id
-
-        /// if user has entered before,
-        /// we generate a new user id
-        /// for them 
-        if (!user || !userId) {
-            userId = dbManager.generateUserId()
-            user = new UserModel(userId, user?.name)
-        }
-
-        let u: UserModel = new UserModel(user.id!, user.name)
-
-        dbManager.addUser(u)
-
-        let successResponse = new MessageModel(u, commandName, u.toJson(), StatusCode.success)
 
         if (this.strEquals(commandName, authCommand)) {
-            this.sendMsg(successResponse)
+            let prms = message.params
 
-            console.log('authed user:', u)
+            if (!prms) {
+                return
+            }
+
+            let name = prms["name"]
+
+            this.addUser(ip, name)
+
+            this.streamUsersToAllExcept(ip)
 
             return
         }
 
-        if (this.strEquals(commandName, createChatCommand)) {
-            let chat = ChatModel.fromJson(message.params)
+        if (this.strEquals(commandName, sendMessageCommand)) {
+            let chatMsg = ChatMessageModel.fromJson(message.params)
 
-            if (!chat) {
+            if (!chatMsg) {
                 assert(false)
             }
 
-            dbManager.addChat(chat)
-
-            this.sendCreateChat(u, chat)
+            this.sendChatMessage(chatMsg)
         }
 
-        if (this.strEquals(commandName, getChatsCommand)) {
-            this.sendMsg(successResponse)
-
-            this.sendChats(u)
-
-            return
-        }
-
-        if (this.strEquals(commandName, chatsUsersListCommand)) {
-            let users = dbManager.getUsers()
-
-            users.forEach(user => {
-                if (user.id === u.id) {
-                    return
-                }
-                let msg = new MessageModel(user!, chatsUsersListCommand, user.toJson())
-                this.sendMsg(msg)
-            })
-
-            return
-        }
     }
 }
 

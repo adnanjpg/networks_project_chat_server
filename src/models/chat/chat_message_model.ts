@@ -1,36 +1,50 @@
 import assert from "node:assert"
-import { dbManager } from "../../app"
 import AttachmentModel from "./attachment_model"
 
 class ChatMessageModel {
     id: string
-    chatId: string
+    recieversIds: string[]
+    senderId: string
 
     message?: string
 
     attachments: AttachmentModel[]
 
-    constructor(id: string, chatId: string, message?: string, attachmentIds?: string[]) {
+    constructor(
+        id: string,
+        recieversIds: string[],
+        senderId: string,
+        message?: string,
+        attachments?: AttachmentModel[],
+    ) {
         this.id = id
-        this.chatId = chatId
+        this.recieversIds = recieversIds
+        this.senderId = senderId
         this.message = message
-        this.attachments = dbManager.getAttachments(attachmentIds)
+        this.attachments = attachments || []
 
-        assert(message || (attachmentIds && attachmentIds.length != 0),
+        assert(message || (attachments && attachments.length != 0),
             "message or attachments must be defined")
     }
 
     static fromJson(json: any): ChatMessageModel {
         /// json.attachments is lists of ids
-        return new ChatMessageModel(json.id, json.chatId, json.message, json.attachments)
+        return new ChatMessageModel(
+            json.id,
+            json.recieversIds,
+            json.senderId,
+            json.message,
+            json.attachments?.map((attachment: any) => AttachmentModel.fromJson(attachment)) || []
+        )
     }
 
     toJson(): any {
         return {
             id: this.id,
-            chatId: this.chatId,
+            recieversIds: this.recieversIds,
+            senderId: this.senderId,
             message: this.message,
-            attachments: this.attachments.map((attachment: AttachmentModel) => attachment.id)
+            attachments: this.attachments.map((attachment: AttachmentModel) => attachment.toJson)
         }
     }
 }
