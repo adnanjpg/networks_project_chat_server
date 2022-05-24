@@ -1,5 +1,6 @@
 import { assert } from "console"
 import { title } from "process"
+import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript"
 import WebSocket from "ws"
 import ChatMessageModel from "../models/chat/chat_message_model"
 import MessageModel from "../models/message_model"
@@ -27,8 +28,17 @@ abstract class MessageHandler {
         return this.addClientWithId(id, ws)
     }
 
+    static removeClient(id: string): void {
+        this.connectedClients.delete(id)
+        this.connectedUsers = this.connectedUsers.filter(u => u.id != id)
+
+        MessageHandler.streamUsersToAll()
+    }
+
     static addClientWithId(id: string, ws: WebSocket): string {
         this.connectedClients.set(id, ws)
+
+        MessageHandler.streamUsersTo(id)
 
         return id
     }
@@ -81,11 +91,16 @@ abstract class MessageHandler {
             return
         }
 
+
         let users = this.getUsersFilter().filter(u => u.id != id)
         let usersJson = users.map(u => u.toJson())
         let msg = new MessageModel(chatsUsersListCommand, { 'users': usersJson })
 
         this.sendMsgToWs(msg, ws)
+    }
+
+    static streamUsersToAll(id?: string): void {
+        return this.streamUsersToAllExcept()
     }
 
     static streamUsersToAllExcept(id?: string): void {

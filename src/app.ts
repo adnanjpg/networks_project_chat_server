@@ -28,10 +28,13 @@ wss.on("connection", (ws: WebSocket, request: any): void => {
 
     let id = MessageHandler.addClient(ws)
 
-    MessageHandler.streamUsersTo(id)
 
     ws.on("message", (messageAscii: any) => {
         MessageHandler.handleMessage(id, messageAscii)
+    })
+
+    ws.on("close", () => {
+        MessageHandler.removeClient(id)
     })
 })
 
