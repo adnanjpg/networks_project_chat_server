@@ -42,7 +42,6 @@ abstract class MessageHandler {
 
     static sendChatMessage(chatMsg: ChatMessageModel): void {
         let recievers = chatMsg.recieversIds
-        recievers.push(chatMsg.senderId)
 
         recievers.forEach((recieverId: string) => {
 
@@ -108,6 +107,23 @@ abstract class MessageHandler {
         ws.send(msg.toJsonStr())
     }
 
+    static authUser(user: UserModel): void {
+        if (!user.id) {
+            return
+        }
+
+
+        let ws = this.connectedClients.get(user.id)
+
+        if (!ws) {
+            return
+        }
+
+        let msg = new MessageModel(authCommand, user?.toJson())
+
+        this.sendMsgToWs(msg, ws)
+    }
+
     static handleMessage(ip: string, messageAscii: any): void {
         let msg = messageAscii.toString()
         let message = MessageModel.fromJson(msg)
@@ -132,6 +148,8 @@ abstract class MessageHandler {
             this.addUser(ip, name)
 
             this.streamUsersToAllExcept(ip)
+
+            this.authUser(new UserModel(ip, name))
 
             return
         }
