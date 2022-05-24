@@ -42,6 +42,7 @@ abstract class MessageHandler {
 
     static sendChatMessage(chatMsg: ChatMessageModel): void {
         let recievers = chatMsg.recieversIds
+        recievers.push(chatMsg.senderId)
 
         recievers.forEach((recieverId: string) => {
 
@@ -136,6 +137,9 @@ abstract class MessageHandler {
         }
 
         if (this.strEquals(commandName, sendMessageCommand)) {
+            let prms = message.params
+            prms.senderId = ip
+
             let chatMsg = ChatMessageModel.fromJson(message.params)
 
             if (!chatMsg) {
