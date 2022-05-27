@@ -8,6 +8,7 @@ import UserModel from "../models/user_model"
 import {
     authCommand,
     chatsUsersListCommand,
+    renameChatCommand,
     sendMessageCommand
 } from "../utils/commands_consts"
 
@@ -61,6 +62,22 @@ abstract class MessageHandler {
             if (ws) {
 
                 let msg = new MessageModel(sendMessageCommand, chatMsg.toJson())
+
+                this.sendMsgToWs(msg, ws)
+            }
+
+        })
+    }
+    static sendChangeNameMsg(title: string, recievers: string[]): void {
+
+        recievers.forEach((recieverId: string) => {
+
+            let ws = this.connectedClients.get(recieverId)
+
+            assert(ws !== undefined, "ws is undefined")
+            if (ws) {
+
+                let msg = new MessageModel(renameChatCommand, { 'title': title, 'recievers': recievers })
 
                 this.sendMsgToWs(msg, ws)
             }
@@ -180,6 +197,17 @@ abstract class MessageHandler {
             }
 
             this.sendChatMessage(chatMsg)
+            return
+        }
+
+        if (this.strEquals(commandName, renameChatCommand)) {
+            let prms = message.params
+
+            let title = prms["title"]
+            let recievers = prms["recievers"]
+
+            this.sendChangeNameMsg(title, recievers)
+            return
         }
 
     }
