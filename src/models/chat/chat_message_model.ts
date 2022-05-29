@@ -1,4 +1,4 @@
-import assert from "node:assert"
+import { assert } from "console"
 import AttachmentModel from "./attachment_model"
 
 class ChatMessageModel {

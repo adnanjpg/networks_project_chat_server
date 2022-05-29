@@ -1,7 +1,5 @@
 import { assert } from "console"
-import { title } from "process"
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript"
-import WebSocket from "ws"
+import * as WebSocket from "ws"
 import ChatMessageModel from "../models/chat/chat_message_model"
 import MessageModel from "../models/message_model"
 import UserModel from "../models/user_model"
@@ -11,8 +9,6 @@ import {
     renameChatCommand,
     sendMessageCommand
 } from "../utils/commands_consts"
-
-import StatusCode from "../utils/enums/status_code"
 
 abstract class MessageHandler {
 

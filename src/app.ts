@@ -1,10 +1,10 @@
 
-import WebSocket from 'ws'
+import * as WebSocket from 'ws'
 import MessageHandler from './processors/message_handler';
 
 import { port } from './utils/consts'
 
-import util from 'util';
+import * as util from 'util';
 import * as child from 'child_process'
 const exec = util.promisify(child.exec);
 

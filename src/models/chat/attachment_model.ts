@@ -1,4 +1,4 @@
-import assert from "node:assert"
+import { assert } from "console"
 
 class AttachmentModel {
     id: string
