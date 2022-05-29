@@ -1,12 +1,12 @@
 
 import WebSocket from 'ws'
-import UserModel from './models/user_model';
 import MessageHandler from './processors/message_handler';
 
 import { port } from './utils/consts'
 
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+import util from 'util';
+import * as child from 'child_process'
+const exec = util.promisify(child.exec);
 
 // start the server and specify the port number
 const wss = new WebSocket.Server({ port: port })
