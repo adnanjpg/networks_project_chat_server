@@ -15,7 +15,7 @@ async function ls() {
   // so the client app can easily connect.
   // i want to check the os and run the appropriate command,
   // on macos: ipconfig getifaddr en0
-  // on linux: hostname -I | awk '{print $1}'
+  // on linux: ip addr show eth0 | grep 'inet ' | awk '{print $2}' | cut -d '/' -f 1
 
   const os = require("os")
   let ipCommand = ""
@@ -33,6 +33,8 @@ async function ls() {
   } else {
     throw new Error("Unsupported OS")
   }
+
+  console.log(`[WebSocket] Running command: ${ipCommand}`)
 
   const { stdout } = await exec(ipCommand)
   let ip = stdout.replace(/\n/g, "")
